@@ -1,0 +1,48 @@
+{
+    "name": "nocopyrightsounds-api",
+    "version": "3.0.2",
+    "description": "A webscraper for the NoCopyrightSounds website to provide an API",
+    "main": "dist/cjs/main.js",
+    "module": "dist/esm/main.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/KaninchenSpeed/NoCopyrightSounds-API"
+    },
+    "scripts": {
+        "clean": "rm -rf dist",
+        "build": "tsc --module CommonJS --outDir dist/cjs; tsc --module ESNext --outDir dist/esm; cp -r src/api dist/cjs/api; cp -r src/api dist/esm/api",
+        "buildWatch": "tsc --watch --module CommonJS --outDir dist/cjs; tsc --watch --module ESNext --outDir dist/esm",
+        "devStart": "ts-node src/server.ts",
+        "dev": "concurrently \"npm run devStart\" \"npm --prefix frontend run dev\"",
+        "prepublishOnly": "npm run clean; npm run build; npm run prettier",
+        "prettier": "prettier --write .",
+        "test": "tsc -p tests/tsconfig.test.json ; node --enable_source_maps tests/dist/tests/main.test.js",
+        "testCache": "tsc -p tests/tsconfig.test.json ; node --enable_source_maps tests/dist/tests/cache.test.js"
+    },
+    "keywords": [
+        "NoCopyrightSounds",
+        "ncs",
+        "scraper"
+    ],
+    "author": "KaninchenSpeed",
+    "license": "GPL-3.0",
+    "devDependencies": {
+        "@types/cors": "^2.8.19",
+        "@types/express": "^5.0.6",
+        "@types/jsdom": "^21.1.6",
+        "@types/node": "^20.11.28",
+        "concurrently": "^8.2.2",
+        "prettier": "^3.2.5",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.4.2"
+    },
+    "dependencies": {
+        "axios": "^1.6.7",
+        "cors": "^2.8.6",
+        "express": "^5.2.1",
+        "jsdom": "^24.0.0"
+    },
+    "files": [
+        "dist"
+    ]
+}
