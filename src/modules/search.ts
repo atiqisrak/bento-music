@@ -22,7 +22,8 @@ export const search = async (filter: Filter, page = 0): Promise<Song[]> => {
                 : ''
         }`,
         {
-            responseType: 'text'
+            responseType: 'text',
+            timeout: 15000
         }
     )
     const dom = new JSDOM(html)

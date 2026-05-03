@@ -9,7 +9,8 @@ import type Artist_info from '../api/ArtistInfo'
 export const getArtistInfo = async (artistUrl: string | Artist): Promise<Artist_info> => {
     if (typeof artistUrl != 'string') artistUrl = artistUrl.url
     const { data: html } = await axios.get<string>(`https://ncs.io${artistUrl}`, {
-        responseType: 'text'
+        responseType: 'text',
+        timeout: 15000
     })
 
     const dom = new JSDOM(html)

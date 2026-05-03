@@ -90,49 +90,61 @@ app.get('/api/sync', async (req, res) => {
     res.json({ message: 'Sync started. This will run in the background.' });
 
     try {
-        let allSongs: any[] = [];
-        let page = 0;
-        let hasMore = true;
+        let allSongs: any[] = []
+        let page = 0
+        let hasMore = true
+        let consecutiveFailures = 0
+        const MAX_CONSECUTIVE_FAILURES = 3
 
         while (hasMore) {
-            console.log(`Syncing page ${page}...`);
-            const songs = await ncs.getSongs(page);
-            if (songs.length === 0) {
-                hasMore = false;
-                break;
-            }
-            
-            const enhancedSongs = songs.map(song => ({
-                Title: song.name,
-                Url: song.url,
-                Tags: ["luxury", "nightlife", "city lights", "helicopter", "infinity pool", "floating lanterns", "high-rise", "upscale travel"],
-                Moods: ["confident", "happy"],
-                Settings: ["hotel", "pool", "outdoor"],
-                DurationSecs: 0,
-                // Original metadata
-                OriginalGenre: song.genre,
-                OriginalTags: song.tags,
-                PreviewUrl: song.previewUrl,
-                DownloadUrl: song.download.regular,
-                CoverUrl: song.coverUrl,
-                Date: song.date
-            }));
+            console.log(`Syncing page ${page}...`)
+            try {
+                const songs = await ncs.getSongs(page)
+                if (songs.length === 0) {
+                    hasMore = false
+                    break
+                }
 
-            allSongs = allSongs.concat(enhancedSongs);
-            page++;
-            
-            // Limit to first 5 pages for testing/performance unless we want all. 
-            // The user wants "all", but let's be careful not to trigger rate limits.
-            // We'll add a 1 second delay between requests.
-            await new Promise(r => setTimeout(r, 1000));
+                const enhancedSongs = songs.map(song => ({
+                    Title: song.name,
+                    Url: song.url,
+                    Tags: ["luxury", "nightlife", "city lights", "helicopter", "infinity pool", "floating lanterns", "high-rise", "upscale travel"],
+                    Moods: ["confident", "happy"],
+                    Settings: ["hotel", "pool", "outdoor"],
+                    DurationSecs: 0,
+                    // Original metadata
+                    OriginalGenre: song.genre,
+                    OriginalTags: song.tags,
+                    PreviewUrl: song.previewUrl,
+                    DownloadUrl: song.download.regular,
+                    CoverUrl: song.coverUrl,
+                    Date: song.date
+                }))
+
+                allSongs = allSongs.concat(enhancedSongs)
+                consecutiveFailures = 0 // reset on success
+                page++
+            } catch (pageError) {
+                consecutiveFailures++
+                console.error(`Error syncing page ${page} (failure ${consecutiveFailures}/${MAX_CONSECUTIVE_FAILURES}):`, pageError)
+                if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+                    console.error('Too many consecutive failures — stopping sync early.')
+                    hasMore = false
+                    break
+                }
+                page++ // skip to next page and keep going
+            }
+
+            // Polite delay between requests to avoid rate limiting
+            await new Promise(r => setTimeout(r, 1000))
         }
 
-        await fs.writeFile('synced_data.json', JSON.stringify(allSongs, null, 2));
-        console.log(`Sync complete. Saved ${allSongs.length} songs.`);
+        await fs.writeFile('synced_data.json', JSON.stringify(allSongs, null, 2))
+        console.log(`Sync complete. Saved ${allSongs.length} songs.`)
     } catch (error) {
-        console.error('Error during sync:', error);
+        console.error('Error during sync:', error)
     } finally {
-        isSyncing = false;
+        isSyncing = false
     }
 });
 
